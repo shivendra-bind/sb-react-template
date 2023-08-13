@@ -1,0 +1,41 @@
+name: Playwright Tests
+on:
+  push:
+    branches: ["feat/*", "fix/*", "revert/*", "refactor/*", "main"]
+  pull_request:
+    branches: [main]
+jobs:
+  test:
+    strategy:
+      matrix:
+        node-version: [18.x]
+    timeout-minutes: 60
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Create env'
+        run: echo "Create env"
+        env:
+          SB_API_PREFIX: ${{ env.SB_API_PREFIX }}
+          SB_API_VERSION: ${{ env.SB_API_VERSION }}
+          SB_API_BASE_PATH: ${{ env.SB_API_BASE_PATH }}
+      - uses: actions/checkout@v3
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v3
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+      - name: Run Playwright tests
+        run: npx playwright test
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 30
